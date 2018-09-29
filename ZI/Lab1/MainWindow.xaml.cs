@@ -20,19 +20,48 @@ namespace Lab1
     /// </summary>
     public partial class MainWindow : Window
     {
-        private ObservableCollection<string> output = new ObservableCollection<string>();
+        private class Data
+        {
+            public string Input { get; set; }
+            public string Key { get; set; }
+            public ObservableCollection<string> output = new ObservableCollection<string>();
+
+            public void Mutate(KeyValuePair<string, int> operation)
+            {
+                var result = new StringBuilder();
+                result.Append(this.Input);
+                result.Append($" --> {operation.Key} (Ключ: {this.Key}) --> ");
+                foreach (char symbol in this.Input)
+                {
+                    int key = int.Parse(this.Key) * operation.Value;
+                    result.Append((char)((int)symbol + key));
+                }
+                this.output.Add(result.ToString());
+            }
+        }
+
+        private Data data = new Data();
+        private Dictionary<string, int> operations = new Dictionary<string, int>
+        {
+            ["Зашифровать"] = -1,
+            ["Расшифровать"] = 1
+        };
 
         public MainWindow()
         {
             InitializeComponent();
-            this.Output.ItemsSource = this.output;
+            this.DataContext = this.data;
+            this.Output.ItemsSource = this.data.output;
         }
 
         private void ButtonEncrypt_Click(object sender, RoutedEventArgs e)
         {
-            var result = new StringBuilder();
-            result.Append(this.Input.Text + this.Key.Text);
-            this.output.Add(result.ToString());
+            this.data.Mutate(new KeyValuePair<string, int>();
+        }
+
+        private void Decrypt_Click(object sender, RoutedEventArgs e)
+        {
+            this.data.Mutate(this.operations["Decrypt"]);
         }
     }
 }
