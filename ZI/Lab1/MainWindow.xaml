@@ -5,14 +5,14 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Lab1"
         mc:Ignorable="d"
-        Title="Шифр Юлия Цезаря" Height="450" Width="621.716">
-    <Grid Margin="0,0,0,0">
-        <TextBox x:Name="Input" Text="{Binding Input}" HorizontalAlignment="Left" Height="23" TextWrapping="Wrap" VerticalAlignment="Top" Width="592" Margin="10,10,0,0"/>
-        <Button x:Name="Encrypt" Content="Зашифровать" HorizontalAlignment="Left" VerticalAlignment="Top" Width="240" Margin="10,38,0,0" Click="ButtonEncrypt_Click"/>
-        <Button x:Name="Decrypt" Content="Расшифровать" HorizontalAlignment="Left" VerticalAlignment="Top" Width="240" Margin="270,38,0,0" Click="Decrypt_Click"/>
-        <TextBox x:Name="Key" Text="{Binding Key}" HorizontalAlignment="Left" Height="23" TextWrapping="Wrap" VerticalAlignment="Top" Width="40" Margin="562,35,0,0" MaxLines="1"/>
-        <Label x:Name="lblKey" Content="Ключ:" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="515,32,0,0"/>
-        <ListBox x:Name="Output" HorizontalAlignment="Left" Height="346" VerticalAlignment="Top" Width="592" Margin="10,63,0,0"/>
-
+        Title="Шифр Юлия Цезаря" Height="450" Width="620" WindowStartupLocation="CenterScreen" ResizeMode="CanMinimize">
+    <Grid>
+        <TextBox x:Name="Input" Text="{Binding Input}" Margin="10,10,364,391"/>
+        <TextBox x:Name="Output" Text="{Binding Output}" Margin="364,10,10,391"/>
+        <Button x:Name="Encrypt" Content="Зашифровать" Margin="10,35,364,366" Click="Encrypt_Click"/>
+        <Button x:Name="Decrypt" Content="Расшифровать" Margin="364,35,10,366" Click="Decrypt_Click"/>
+        <TextBlock x:Name="KeyCaption" Text="Ключ:" Margin="273,22,299,383"/>
+        <TextBox x:Name="Key" Text="{Binding Key}" Margin="320,21,274,380" MaxLength="2"/>
+        <ListBox x:Name="Log" Margin="10,70,10,10" SelectionChanged="Log_SelectionChanged"/>
     </Grid>
 </Window>

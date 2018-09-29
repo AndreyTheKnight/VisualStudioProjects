@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Windows;
@@ -20,48 +21,126 @@ namespace Lab1
     /// </summary>
     public partial class MainWindow : Window
     {
-        private class Data
-        {
-            public string Input { get; set; }
-            public string Key { get; set; }
-            public ObservableCollection<string> output = new ObservableCollection<string>();
-
-            public void Mutate(KeyValuePair<string, int> operation)
-            {
-                var result = new StringBuilder();
-                result.Append(this.Input);
-                result.Append($" --> {operation.Key} (Ключ: {this.Key}) --> ");
-                foreach (char symbol in this.Input)
-                {
-                    int key = int.Parse(this.Key) * operation.Value;
-                    result.Append((char)((int)symbol + key));
-                }
-                this.output.Add(result.ToString());
-            }
-        }
-
-        private Data data = new Data();
-        private Dictionary<string, int> operations = new Dictionary<string, int>
+        private static Dictionary<string, int> actions = new Dictionary<string, int>
         {
             ["Зашифровать"] = -1,
             ["Расшифровать"] = 1
         };
 
+        private class Data : INotifyPropertyChanged
+        {
+            public class LogEntry
+            {
+                public string input;
+                public string output;
+                public string action;
+                public string key;
+
+                public LogEntry(string input, string output, string action, string key)
+                {
+                    this.input = input;
+                    this.output = output;
+                    this.action = action;
+                    this.key = key;
+                }
+                override public string ToString()
+                {
+                    return (action == "Зашифровать") ?
+                        ($"{input} --> {action} c ключом {key} --> {output}") :
+                        ($"{output} --> {action} c ключом {key} --> {input}");
+                }
+            }
+
+            private string input;
+            private string output;
+            private string key;
+            public ObservableCollection<LogEntry> log = new ObservableCollection<LogEntry>();
+
+            public string Input
+            {
+                get { return input; }
+                set
+                {
+                    input = value;
+                    OnPropertyChanged("Input");
+                }
+            }
+            public string Output
+            {
+                get { return output; }
+                set
+                {
+                    output = value;
+                    OnPropertyChanged("Output");
+                }
+            }
+            public string Key
+            {
+                get { return key; }
+                set
+                {
+                    key = value;
+                    OnPropertyChanged("Key");
+                }
+            }
+
+            public event PropertyChangedEventHandler PropertyChanged;
+            protected void OnPropertyChanged(string property)
+            {
+                try
+                {
+                    PropertyChanged(this, new PropertyChangedEventArgs(property));
+                }
+                catch (NullReferenceException) { };
+            }
+
+            public void Mutate(string action)
+            {
+                var source = (action == "Зашифровать") ? Input : Output;
+                var key = int.Parse(Key) * actions[action];
+                var result = new StringBuilder();
+                foreach (var symbol in source)
+                    result.Append((char)(symbol + key));
+                if (action == "Зашифровать")
+                    Output = result.ToString();
+                else
+                    Input = result.ToString();
+                log.Add(new LogEntry(Input, Output, action, Key));
+            }
+            public void LogEntrySelected(object item)
+            {
+                if (item != null)
+                {
+                    Input = ((LogEntry)item).input;
+                    Output = ((LogEntry)item).output;
+                    Key = ((LogEntry)item).key;
+                }
+            }
+        }
+
+        private Data data = new Data();
+
         public MainWindow()
         {
             InitializeComponent();
-            this.DataContext = this.data;
-            this.Output.ItemsSource = this.data.output;
+            DataContext = data;
+            Log.ItemsSource = data.log;
+            data.Key = "4";
         }
 
-        private void ButtonEncrypt_Click(object sender, RoutedEventArgs e)
+        private void Encrypt_Click(object sender, RoutedEventArgs e)
         {
-            this.data.Mutate(new KeyValuePair<string, int>();
+            data.Mutate("Зашифровать");
         }
 
         private void Decrypt_Click(object sender, RoutedEventArgs e)
         {
-            this.data.Mutate(this.operations["Decrypt"]);
+            data.Mutate("Расшифровать");
+        }
+
+        private void Log_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            data.LogEntrySelected(Log.SelectedItem);
         }
     }
 }
