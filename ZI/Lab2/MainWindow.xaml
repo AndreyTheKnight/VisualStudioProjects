@@ -1,0 +1,28 @@
+﻿<Window x:Class="Lab2.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d"
+        Title="DESX. Простая замена" Height="450" Width="620" WindowStartupLocation="CenterScreen" ResizeMode="CanMinimize">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="20"/>
+            <RowDefinition/>
+            <RowDefinition Height="30"/>
+            <RowDefinition Height="50"/>
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition/>
+            <ColumnDefinition/>
+        </Grid.ColumnDefinitions>
+        <TextBlock Text="Открытый текст:" Grid.Row="0" Grid.Column="0" HorizontalAlignment="Center" VerticalAlignment="Bottom"/>
+        <TextBlock Text="Зашифрованный текст:" Grid.Row="0" Grid.Column="1" HorizontalAlignment="Center" VerticalAlignment="Bottom"/>
+        <TextBlock Text="Ключ:" Grid.Row="2" Grid.Column="0" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="10,0,0,0"/>
+        <TextBox x:Name="Plaintext" Text="{Binding Plaintext}" TextWrapping="Wrap" AcceptsReturn="True" Grid.Row="1" Grid.Column="0" Margin="10,0,10,5"/>
+        <TextBox x:Name="Ciphertext" Text="{Binding Ciphertext}" TextWrapping="Wrap" AcceptsReturn="True" Grid.Row="1" Grid.Column="1" Margin="10,0,10,5"/>
+        <TextBox x:Name="Key" Text="{Binding Key}" Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" Margin="45,5,10,5"/>
+        <Button x:Name="Encrypt" Content="Зашифровать" Grid.Row="3" Grid.Column="0" Margin="10,5,10,10" Click="Encrypt_Click"/>
+        <Button x:Name="Decrypt" Content="Расшифровать" Grid.Row="3" Grid.Column="1" Margin="10,5,10,10" Click="Decrypt_Click"/>
+    </Grid>
+</Window>
