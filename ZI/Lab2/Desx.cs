@@ -129,53 +129,82 @@ namespace Lab2
         private static BitArray IpReverseInversion(BitArray lBits, BitArray rBits)
         {
             var result = new BitArray(64);
-            for (var i = 0; i < result.Length; i++)
+            for (var i = 0; i < result.Count; i++)
                 result[i] = ((ipReverseTable[i] - 1) < 32) ? lBits[ipReverseTable[i] - 1] : rBits[ipReverseTable[i] - 1 - 32];
             return result;
         }
-        private static void Cycles(ref BitArray lBits, ref BitArray rBits)
+        private static void Cycles(ref BitArray lBits, ref BitArray rBits, BitArray key)
         {
+            var extKey = new BitArray(64);
+            for (var i = 0; i < 8; i++)
+            {
+                var parityBit = true;
+                for (var j = 0; j < 7; j++)
+                {
+                    extKey[i * 8 + j] = key[i * 7 + j];
+                    parityBit ^= key[i * 7 + j];
+                }
+                extKey[i * 8 + 7] = parityBit;
+            }
+            var cIdI = new BitArray(64);
+            for (var i = 0; i < 64; i++)
+                cIdI[i] = extKey[c0d0Table[i] - 1];
             for (var i = 0; i < 16; i++)
             {
                 var newLBits = rBits;
-                var newRBits = lBits.Xor(FeistelFunc(rBits, KeyGen(i)));
+                var newRBits = lBits.Xor(FeistelFunc(rBits, KeyIGen(ref cIdI, i)));
                 lBits = newLBits;
                 rBits = newRBits;
             }
         }
-        private static BitArray FeistelFunc(BitArray rBits, BitArray key)
+        private static BitArray FeistelFunc(BitArray bits, BitArray keyI)
         {
             var result = new BitArray(32);
+
             return result;
         }
-        private static BitArray KeyGen(int i)
+        private static BitArray KeyIGen(ref BitArray cIdI, int cycleIdx)
         {
             var result = new BitArray(48);
+            for (var shiftsCnt = 0; shiftsCnt < shiftLeftTable[cycleIdx]; shiftsCnt++)
+            {
+                var tmp = cIdI[0];
+                for (var i = 1; i < cIdI.Count; i++)
+                    cIdI[i - 1] = cIdI[i];
+                cIdI[cIdI.Count - 1] = tmp;
+            }
+            for (var i = 0; i < result.Count; i++)
+                result[i] = cIdI[kTable[i] - 1];
             return result;
         }
-        private static BitArray StringToBits(string str)
+        private static BitArray StrToBits(string str)
         {
             return new BitArray(Encoding.Default.GetBytes(str));
         }
-        private static string BitsToString(BitArray blockBits)
+        private static string BitsToStr(BitArray bits)
         {
             var block = new byte[8];
-            blockBits.CopyTo(block, 0);
+            bits.CopyTo(block, 0);
             return Encoding.Default.GetString(block);
         }
         
-        public static string Encrypt(string plaintext)
+        public static string Encrypt(string plaintext, string key)
         {
             var result = new StringBuilder();
+            var k = StrToBits(key.Substring(0, 7));
+            var k1 = StrToBits(key.Substring(7, 8));
+            var k2 = StrToBits(key.Substring(15, 8));
             while (plaintext.Length % 8 != 0)
                 plaintext += " ";
             for (var i = 0; i < plaintext.Length; i += 8)
             {
-                var blockBits = 
+                var blockBits = StrToBits(plaintext.Substring(i, 8)).Xor(k1);
                 var lBits = new BitArray(32);
                 var rBits = new BitArray(32);
                 IpInversion(blockBits, ref lBits, ref rBits);
-                
+                Cycles(ref lBits, ref rBits, k);
+                blockBits = IpReverseInversion(lBits, rBits).Xor(k2);
+                result.Append(BitsToStr(blockBits));
             }
             return result.ToString();
         }
