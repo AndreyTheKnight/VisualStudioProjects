@@ -153,6 +153,16 @@ namespace Lab2
             var result = new BitArray(48);
             return result;
         }
+        private static BitArray StringToBits(string str)
+        {
+            return new BitArray(Encoding.Default.GetBytes(str));
+        }
+        private static string BitsToString(BitArray blockBits)
+        {
+            var block = new byte[8];
+            blockBits.CopyTo(block, 0);
+            return Encoding.Default.GetString(block);
+        }
         
         public static string Encrypt(string plaintext)
         {
@@ -161,11 +171,11 @@ namespace Lab2
                 plaintext += " ";
             for (var i = 0; i < plaintext.Length; i += 8)
             {
-                var blockBits = new BitArray(Encoding.Default.GetBytes(plaintext.Substring(i, 8)));
+                var blockBits = 
                 var lBits = new BitArray(32);
                 var rBits = new BitArray(32);
                 IpInversion(blockBits, ref lBits, ref rBits);
-
+                
             }
             return result.ToString();
         }
