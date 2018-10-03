@@ -74,6 +74,13 @@ namespace Lab2
             DataContext = data;
         }
 
+        private void RngKey_Click(object sender, RoutedEventArgs e)
+        {
+            var newKey = new byte[23];
+            new Random().NextBytes(newKey);
+            data.Key = Encoding.Default.GetString(newKey);
+        }
+
         private void Encrypt_Click(object sender, RoutedEventArgs e)
         {
             data.Ciphertext = data.Plaintext.Encrypt(data.Key);
@@ -81,7 +88,7 @@ namespace Lab2
 
         private void Decrypt_Click(object sender, RoutedEventArgs e)
         {
-            data.Plaintext = Desx.Decrypt(data.Ciphertext);
+            data.Plaintext = data.Ciphertext.Decrypt(data.Key);
         }
 
     }

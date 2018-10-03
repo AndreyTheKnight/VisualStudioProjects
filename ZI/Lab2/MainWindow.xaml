@@ -21,7 +21,8 @@
         <TextBlock Text="Ключ:" Grid.Row="2" Grid.Column="0" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="10,0,0,0"/>
         <TextBox x:Name="Plaintext" Text="{Binding Plaintext}" TextWrapping="Wrap" AcceptsReturn="True" Grid.Row="1" Grid.Column="0" Margin="10,0,10,5"/>
         <TextBox x:Name="Ciphertext" Text="{Binding Ciphertext}" TextWrapping="Wrap" AcceptsReturn="True" Grid.Row="1" Grid.Column="1" Margin="10,0,10,5"/>
-        <TextBox x:Name="Key" Text="{Binding Key}" Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" Margin="45,5,10,5"/>
+        <TextBox x:Name="Key" Text="{Binding Key}" Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" Margin="45,5,110,5"/>
+        <Button x:Name="RngKey" Content="Сгенерировать" Grid.Row="2" Grid.Column="1" HorizontalAlignment="Right" Margin="0,5,10,5" Click="RngKey_Click"/>
         <Button x:Name="Encrypt" Content="Зашифровать" Grid.Row="3" Grid.Column="0" Margin="10,5,10,10" Click="Encrypt_Click"/>
         <Button x:Name="Decrypt" Content="Расшифровать" Grid.Row="3" Grid.Column="1" Margin="10,5,10,10" Click="Decrypt_Click"/>
     </Grid>

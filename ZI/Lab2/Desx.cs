@@ -145,7 +145,7 @@ namespace Lab2
                 blockBits[i] = ((ipReverseTable[i] - 1) < 32) ? bits.l[ipReverseTable[i] - 1] : bits.r[ipReverseTable[i] - 1 - 32];
             return blockBits;
         }
-        private static Bits Rounds(this Bits bits, BitArray key)
+        private static Bits Rounds(this Bits bits, BitArray key, bool encMode)
         {
             var extKey = new BitArray(64);
             for (var i = 0; i < 8; i++)
@@ -164,7 +164,7 @@ namespace Lab2
             for (var i = 0; i < 16; i++)
             {
                 var newLBits = bits.r;
-                var newRBits = bits.l.Xor(FeistelFunc(bits.r, KeyIGen(ref cIdI, i)));
+                var newRBits = bits.l.Xor(FeistelFunc(bits.r, KeyIGen(ref cIdI, i, encMode)));
                 bits.l = newLBits;
                 bits.r = newRBits;
             }
@@ -190,16 +190,33 @@ namespace Lab2
                 result[i] = bits[pTable[i] - 1];
             return result;
         }
-        private static BitArray KeyIGen(ref BitArray cIdI, int cycleIdx)
+        private static BitArray KeyIGen(ref BitArray cIdI, int roundIdx, bool encMode)
         {
             var result = new BitArray(48);
-            for (var shiftsCnt = 0; shiftsCnt < shiftLeftTable[cycleIdx]; shiftsCnt++)
-            {
-                var tmp = cIdI[0];
-                for (var i = 1; i < cIdI.Count; i++)
-                    cIdI[i - 1] = cIdI[i];
-                cIdI[cIdI.Count - 1] = tmp;
-            }
+            /*if (encMode)
+                for (var shiftsCnt = 0; shiftsCnt < shiftLeftTable[roundIdx]; shiftsCnt++)
+                {
+                    var tmp = cIdI[0];
+                    for (var i = 1; i < cIdI.Count / 2; i++)
+                        cIdI[i - 1] = cIdI[i];
+                    cIdI[cIdI.Count / 2 - 1] = tmp;
+                    tmp = cIdI[cIdI.Count / 2];
+                    for (var i = cIdI.Count / 2 + 1; i < cIdI.Count; i++)
+                        cIdI[i - 1] = cIdI[i];
+                    cIdI[cIdI.Count - 1] = tmp;
+                }
+            else
+                for (var shiftsCnt = 0; shiftsCnt < shiftRightTable[roundIdx]; shiftsCnt++)
+                {
+                    var tmp = cIdI[cIdI.Count / 2 - 1];
+                    for (var i = 0; i < cIdI.Count / 2 - 1; i++)
+                        cIdI[i + 1] = cIdI[i];
+                    cIdI[0] = tmp;
+                    tmp = cIdI[cIdI.Count - 1];
+                    for (var i = cIdI.Count / 2; i < cIdI.Count - 1; i++)
+                        cIdI[i + 1] = cIdI[i];
+                    cIdI[cIdI.Count / 2] = tmp;
+                }*/
             for (var i = 0; i < result.Count; i++)
                 result[i] = cIdI[kTable[i] - 1];
             return result;
@@ -223,18 +240,37 @@ namespace Lab2
         {
             var result = new StringBuilder();
             var k = key.Substring(0, 7).ToBits();
-            var k1 = key.Substring(7, 8).ToBits();
-            var k2 = key.Substring(15, 8).ToBits();
+            //var k1 = key.Substring(7, 8).ToBits();
+            //var k2 = key.Substring(15, 8).ToBits();
             while (plaintext.Length % 8 != 0)
                 plaintext += " ";
             for (var i = 0; i < plaintext.Length; i += 8)
-                result.Append(plaintext.Substring(i, 8).ToBits().Xor(k1)
-                    .IpInversion().Rounds(k).IpReverseInversion().ToStr());
+                result.Append(plaintext.Substring(i, 8)
+                    .ToBits()
+                    //.Xor(k1)
+                    .IpInversion()
+                    .Rounds(k, true)
+                    .IpReverseInversion()
+                    //.Xor(k2)
+                    .ToStr());
             return result.ToString();
         }
-        public static string Decrypt(string ciphertext)
+        public static string Decrypt(this string ciphertext, string key)
         {
-            return ciphertext;
+            var result = new StringBuilder();
+            var k = key.Substring(0, 7).ToBits();
+            //var k1 = key.Substring(7, 8).ToBits();
+            //var k2 = key.Substring(15, 8).ToBits();
+            for (var i = 0; i < ciphertext.Length; i += 8)
+                result.Append(ciphertext.Substring(i, 8)
+                    .ToBits()
+                    //.Xor(k2)
+                    .IpInversion()
+                    .Rounds(k, false)
+                    .IpReverseInversion()
+                    //.Xor(k1)
+                    .ToStr());
+            return result.ToString();
         }
     }
 }
