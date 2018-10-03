@@ -98,16 +98,16 @@ namespace Lab2
             2,  8,  24, 14, 32, 27, 3,  9,
             19, 13, 30, 6,  22, 11, 4,  25
         };
-        private static readonly int[] c0d0Table =
+        private static readonly int[] pc1Table =
         {
-            57, 49, 41, 33, 25, 17, 9,  8,
-            1,  58, 50, 42, 34, 26, 18, 16,
-            10, 2,  59, 51, 43, 35, 27, 24,
-            19, 11, 3,  60, 52, 44, 36, 32,
-            63, 55, 47, 39, 31, 23, 15, 40,
-            7,  62, 54, 46, 38, 30, 22, 48,
-            14, 6,  61, 53, 45, 37, 29, 56,
-            21, 13, 5,  28, 20, 12, 4,  64
+            57, 49, 41, 33, 25, 17, 9,
+            1,  58, 50, 42, 34, 26, 18,
+            10, 2,  59, 51, 43, 35, 27,
+            19, 11, 3,  60, 52, 44, 36,
+            63, 55, 47, 39, 31, 23, 15,
+            7,  62, 54, 46, 38, 30, 22,
+            14, 6,  61, 53, 45, 37, 29,
+            21, 13, 5,  28, 20, 12, 4
         };
         private static readonly int[] shiftLeftTable =
         {
@@ -117,7 +117,7 @@ namespace Lab2
         {
             0, 1, 2, 2, 2, 2, 2, 2, 1, 2, 2, 2, 2, 2, 2, 1
         };
-        private static readonly int[] kTable =
+        private static readonly int[] pc2Table =
         {
             14, 17, 11, 24, 1,  5,  3,  28, 15, 6,  21, 10, 23, 19, 12, 4,
             26, 8,  16, 7,  27, 20, 13, 2,  41, 52, 31, 37, 47, 55, 30, 40,
@@ -131,7 +131,7 @@ namespace Lab2
                 l = new BitArray(32),
                 r = new BitArray(32)
             };
-            for (var i = 0; i < bits.l.Count; i++)
+            for (var i = 0; i < 32; i++)
             {
                 bits.l[i] = blockBits[ipTable[i] - 1];
                 bits.r[i] = blockBits[ipTable[i + 32] - 1];
@@ -141,41 +141,31 @@ namespace Lab2
         private static BitArray IpReverseInversion(this Bits bits)
         {
             var blockBits = new BitArray(64);
-            for (var i = 0; i < blockBits.Count; i++)
+            for (var i = 0; i < 64; i++)
                 blockBits[i] = ((ipReverseTable[i] - 1) < 32) ? bits.l[ipReverseTable[i] - 1] : bits.r[ipReverseTable[i] - 1 - 32];
             return blockBits;
         }
         private static Bits Rounds(this Bits bits, BitArray key, bool encMode)
         {
-            var extKey = new BitArray(64);
-            for (var i = 0; i < 8; i++)
-            {
-                var parityBit = true;
-                for (var j = 0; j < 7; j++)
-                {
-                    extKey[i * 8 + j] = key[i * 7 + j];
-                    parityBit ^= key[i * 7 + j];
-                }
-                extKey[i * 8 + 7] = parityBit;
-            }
-            var cIdI = new BitArray(64);
-            for (var i = 0; i < cIdI.Count; i++)
-                cIdI[i] = extKey[c0d0Table[i] - 1];
+            var subKeys = key.GenerateSubKeys(encMode);
             for (var i = 0; i < 16; i++)
             {
                 var newLBits = bits.r;
-                var newRBits = bits.l.Xor(FeistelFunc(bits.r, KeyIGen(ref cIdI, i, encMode)));
+                var newRBits = bits.l.Xor(FeistelFunc(bits.r, subKeys[i]));
                 bits.l = newLBits;
                 bits.r = newRBits;
             }
+            var tmp = new BitArray(bits.l);
+            bits.l = bits.r;
+            bits.r = tmp;
             return bits;
         }
-        private static BitArray FeistelFunc(BitArray bits, BitArray keyI)
+        private static BitArray FeistelFunc(BitArray bits, BitArray subKey)
         {
             var extBits = new BitArray(48);
-            for (var i = 0; i < extBits.Count; i++)
+            for (var i = 0; i < 48; i++)
                 extBits[i] = bits[eTable[i] - 1];
-            extBits = extBits.Xor(keyI);
+            extBits = extBits.Xor(subKey);
             for (var i = 0; i < 8; i++)
             {
                 var sRowIdx = (extBits[i * 6].ToInt()) * 2 + (extBits[i * 6 + 5].ToInt());
@@ -190,36 +180,50 @@ namespace Lab2
                 result[i] = bits[pTable[i] - 1];
             return result;
         }
-        private static BitArray KeyIGen(ref BitArray cIdI, int roundIdx, bool encMode)
+        private static BitArray[] GenerateSubKeys(this BitArray key, bool encMode)
         {
-            var result = new BitArray(48);
-            /*if (encMode)
-                for (var shiftsCnt = 0; shiftsCnt < shiftLeftTable[roundIdx]; shiftsCnt++)
-                {
-                    var tmp = cIdI[0];
-                    for (var i = 1; i < cIdI.Count / 2; i++)
-                        cIdI[i - 1] = cIdI[i];
-                    cIdI[cIdI.Count / 2 - 1] = tmp;
-                    tmp = cIdI[cIdI.Count / 2];
-                    for (var i = cIdI.Count / 2 + 1; i < cIdI.Count; i++)
-                        cIdI[i - 1] = cIdI[i];
-                    cIdI[cIdI.Count - 1] = tmp;
-                }
-            else
-                for (var shiftsCnt = 0; shiftsCnt < shiftRightTable[roundIdx]; shiftsCnt++)
-                {
-                    var tmp = cIdI[cIdI.Count / 2 - 1];
-                    for (var i = 0; i < cIdI.Count / 2 - 1; i++)
-                        cIdI[i + 1] = cIdI[i];
-                    cIdI[0] = tmp;
-                    tmp = cIdI[cIdI.Count - 1];
-                    for (var i = cIdI.Count / 2; i < cIdI.Count - 1; i++)
-                        cIdI[i + 1] = cIdI[i];
-                    cIdI[cIdI.Count / 2] = tmp;
-                }*/
-            for (var i = 0; i < result.Count; i++)
-                result[i] = cIdI[kTable[i] - 1];
-            return result;
+            var subKeys = new BitArray[16];
+            var preSubKey = new Bits()
+            {
+                l = new BitArray(28),
+                r = new BitArray(28)
+            };
+            for (var i = 0; i < 28; i++)
+            {
+                preSubKey.l[i] = key[pc1Table[i] - 1];
+                preSubKey.r[i] = key[pc1Table[i + 28] - 1];
+            }
+            for (var i = 0; i < subKeys.Length; i++)
+            {
+                /*if (encMode)
+                    for (var shiftsCnt = 0; shiftsCnt < shiftLeftTable[roundIdx]; shiftsCnt++)
+                    {
+                        var tmp = cIdI[0];
+                        for (var i = 1; i < cIdI.Count / 2; i++)
+                            cIdI[i - 1] = cIdI[i];
+                        cIdI[cIdI.Count / 2 - 1] = tmp;
+                        tmp = cIdI[cIdI.Count / 2];
+                        for (var i = cIdI.Count / 2 + 1; i < cIdI.Count; i++)
+                            cIdI[i - 1] = cIdI[i];
+                        cIdI[cIdI.Count - 1] = tmp;
+                    }
+                else
+                    for (var shiftsCnt = 0; shiftsCnt < shiftRightTable[roundIdx]; shiftsCnt++)
+                    {
+                        var tmp = cIdI[cIdI.Count / 2 - 1];
+                        for (var i = 0; i < cIdI.Count / 2 - 1; i++)
+                            cIdI[i + 1] = cIdI[i];
+                        cIdI[0] = tmp;
+                        tmp = cIdI[cIdI.Count - 1];
+                        for (var i = cIdI.Count / 2; i < cIdI.Count - 1; i++)
+                            cIdI[i + 1] = cIdI[i];
+                        cIdI[cIdI.Count / 2] = tmp;
+                    }*/
+                subKeys[i] = new BitArray(48);
+                for (var j = 0; j < 48; j++)
+                    subKeys[i][j] = pc2Table[j] < 29 ? preSubKey.l[pc2Table[j] - 1] : preSubKey.r[pc2Table[j] - 29];
+            }
+            return subKeys;
         }
         private static BitArray ToBits(this string str)
         {
@@ -239,36 +243,38 @@ namespace Lab2
         public static string Encrypt(this string plaintext, string key)
         {
             var result = new StringBuilder();
-            var k = key.Substring(0, 7).ToBits();
-            //var k1 = key.Substring(7, 8).ToBits();
-            //var k2 = key.Substring(15, 8).ToBits();
+            var k = key.Substring(0, 8).ToBits();
+            var k1 = key.Substring(8, 8).ToBits();
+            var k2 = key.Substring(16, 8).ToBits();
             while (plaintext.Length % 8 != 0)
                 plaintext += " ";
             for (var i = 0; i < plaintext.Length; i += 8)
                 result.Append(plaintext.Substring(i, 8)
                     .ToBits()
-                    //.Xor(k1)
+                    .Xor(k1)
                     .IpInversion()
                     .Rounds(k, true)
                     .IpReverseInversion()
-                    //.Xor(k2)
+                    .Xor(k2)
                     .ToStr());
             return result.ToString();
         }
         public static string Decrypt(this string ciphertext, string key)
         {
             var result = new StringBuilder();
-            var k = key.Substring(0, 7).ToBits();
-            //var k1 = key.Substring(7, 8).ToBits();
-            //var k2 = key.Substring(15, 8).ToBits();
+            var k = key.Substring(0, 8).ToBits();
+            var k1 = key.Substring(8, 8).ToBits();
+            var k2 = key.Substring(16, 8).ToBits();
+            while (ciphertext.Length % 8 != 0)
+                ciphertext += " ";
             for (var i = 0; i < ciphertext.Length; i += 8)
                 result.Append(ciphertext.Substring(i, 8)
                     .ToBits()
-                    //.Xor(k2)
+                    .Xor(k2)
                     .IpInversion()
                     .Rounds(k, false)
                     .IpReverseInversion()
-                    //.Xor(k1)
+                    .Xor(k1)
                     .ToStr());
             return result.ToString();
         }

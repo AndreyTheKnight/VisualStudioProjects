@@ -76,7 +76,7 @@ namespace Lab2
 
         private void RngKey_Click(object sender, RoutedEventArgs e)
         {
-            var newKey = new byte[23];
+            var newKey = new byte[24];
             new Random().NextBytes(newKey);
             data.Key = Encoding.Default.GetString(newKey);
         }
