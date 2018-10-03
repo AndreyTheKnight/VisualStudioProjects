@@ -64,7 +64,6 @@ namespace Lab2
                 catch (NullReferenceException) { };
             }
 
-            
         }
 
         private Data data = new Data();
@@ -77,7 +76,7 @@ namespace Lab2
 
         private void Encrypt_Click(object sender, RoutedEventArgs e)
         {
-            data.Ciphertext = Desx.Encrypt(data.Plaintext);
+            data.Ciphertext = data.Plaintext.Encrypt(data.Key);
         }
 
         private void Decrypt_Click(object sender, RoutedEventArgs e)
