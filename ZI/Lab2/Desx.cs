@@ -199,18 +199,18 @@ namespace Lab2
             for (var i = 0; i < 48; i++)
                 extBits[i] = bits[eTable[i] - 1];
             extBits = extBits.Xor(subKey);
-            var b = new BitArray(32);
+            var newBits = new BitArray(32);
             for (var i = 0; i < 8; i++)
             {
                 var sRowIdx = (extBits[i * 6].ToInt()) * 2 + (extBits[i * 6 + 5].ToInt());
                 var sColIdx = (extBits[i * 6 + 1].ToInt()) * 8 + (extBits[i * 6 + 2].ToInt() * 4)
                     + (extBits[i * 6 + 3].ToInt()) * 2 + (extBits[i * 6 + 4].ToInt());
                 for (int j = 3, sI = sTable[i, sRowIdx, sColIdx]; j >= 0; j--, sI /= 2)
-                    b[i * 4 + j] = (sI % 2 == 1);
+                    newBits[i * 4 + j] = (sI % 2 == 1);
             }
             var result = new BitArray(32);
             for (var i = 0; i < result.Count; i++)
-                result[i] = b[pTable[i] - 1];
+                result[i] = newBits[pTable[i] - 1];
             return result;
         }
         private static BitArray ToBits(this string str)
